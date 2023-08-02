@@ -17,7 +17,7 @@ class ComplexEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 def index(request):
-    return HttpResponse(json.dumps({"data":"123"}))
+    return render(request,'index.html')
 def weixinlogin(request):
     data = json.loads(request.body)
     username = data['username']

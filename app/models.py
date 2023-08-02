@@ -38,4 +38,10 @@ class UandP(models.Model):
     cid = models.IntegerField(verbose_name='cid')
     power = models.IntegerField(verbose_name='power')
 
-
+class CandImg(models.Model):
+    cid = models.IntegerField(verbose_name='cid')
+    keshi = models.IntegerField(verbose_name='keshi')
+    show1 = models.ImageField(upload_to='static/img',verbose_name='show1')
+    show2 = models.ImageField(upload_to='static/img',verbose_name='show2')
+    show3 = models.ImageField(upload_to='static/img',verbose_name='show3')
+    show4 = models.ImageField(upload_to='static/img',verbose_name='show4')

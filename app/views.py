@@ -1,11 +1,23 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from app.models import Person,Course,UandC,UandP
+from app.models import Person,Course,UandC,UandP,CandImg
 import json
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import HttpResponse
 # Create your views here.
+from datetime import date, datetime
+from django.db.models import Q
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')
+        else:
+            return json.JSONEncoder.default(self, obj)
 
+def index(request):
+    return HttpResponse(json.dumps({"data":"123"}))
 def weixinlogin(request):
     data = json.loads(request.body)
     username = data['username']
@@ -29,3 +41,29 @@ def changePassword(request):
     ret = 'True'
     return HttpResponse(json.dumps(ret))
 
+def getclass(request):
+    img = {4:'c++.jpg',3:'py.jpg',2:'s.jpg',1:'jimu.jpg'}
+    data = json.loads(request.body)
+    username = data['username']
+    user = Person.objects.filter(name=username)[0]
+    classlist = UandC.objects.filter(uid=user.uid)
+    alls = []
+    for i in classlist:
+        cls = Course.objects.filter(cid=i.cid)[0]
+        keshi = CandImg.objects.filter(cid=i.cid)[0]
+        alls.append({'class':cls.classs,'images':str(cls.img),'description':cls.description,'keshi':keshi.keshi,'times':i.times,'RC':i.RC,'id':str(int(i.uid)) + "+" + str(int(i.cid))})
+    print(classlist)
+    return HttpResponse(json.dumps(alls,ensure_ascii=False,cls=ComplexEncoder))
+
+
+def myclass(request):
+    data = json.loads(request.body)
+    uid,cid =data['id'][0],data['id'][-1]
+    Ju = UandC.objects.filter(Q(uid=uid)|Q(cid=cid)).first()
+    print(Ju.uid,Ju.cid)
+    Jc = Course.objects.filter(cid=cid).first()
+    images = CandImg.objects.filter(cid=cid).first()
+    imagelist=[{'urls':str(images.show1)},{'urls':str(images.show2)},{'urls':str(images.show3)},{'urls':str(images.show4)}]
+    alls = {'class':Jc.classs,'images':str(Jc.img),'descriptionall':Jc.descriptionall,'keshi':images.keshi,'times':Ju.times,'RC':Ju.RC,'imagelist':imagelist}
+    
+    return HttpResponse(json.dumps(alls,cls=ComplexEncoder))

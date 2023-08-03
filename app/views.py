@@ -42,7 +42,6 @@ def changePassword(request):
     return HttpResponse(json.dumps(ret))
 
 def getclass(request):
-    img = {4:'c++.jpg',3:'py.jpg',2:'s.jpg',1:'jimu.jpg'}
     data = json.loads(request.body)
     username = data['username']
     user = Person.objects.filter(name=username)[0]
@@ -59,11 +58,54 @@ def getclass(request):
 def myclass(request):
     data = json.loads(request.body)
     uid,cid =data['id'][0],data['id'][-1]
-    Ju = UandC.objects.filter(Q(uid=uid)|Q(cid=cid)).first()
+    Ju = UandC.objects.filter(Q(uid=uid)&Q(cid=cid)).first()
     print(Ju.uid,Ju.cid)
     Jc = Course.objects.filter(cid=cid).first()
     images = CandImg.objects.filter(cid=cid).first()
     imagelist=[{'urls':str(images.show1)},{'urls':str(images.show2)},{'urls':str(images.show3)},{'urls':str(images.show4)}]
     alls = {'class':Jc.classs,'images':str(Jc.img),'descriptionall':Jc.descriptionall,'keshi':images.keshi,'times':Ju.times,'RC':Ju.RC,'imagelist':imagelist}
-    
     return HttpResponse(json.dumps(alls,cls=ComplexEncoder))
+
+
+def findQD(request):
+    data = json.loads(request.body)
+    name = data['values']
+    if name.isdigit():
+        stu = Person.objects.filter(phone=name)
+    else:
+        stu = Person.objects.filter(name=name)
+    if stu:
+        stu = stu.first()
+        cls = UandC.objects.filter(uid=stu.uid)
+        clslist = []
+        if cls:
+            for i in cls:
+                if i.RC >= 1:
+                    s = Course.objects.filter(cid=i.cid).first()
+                    clslist.append({'class':s.classs,'images':str(s.img),'description':s.description,'RC':i.RC,'id':str(i.uid) + '+' + str(i.cid)})
+
+        else:
+            return HttpResponse(json.dumps({"ret":"F2","sphone":stu.phone,"sname":stu.name},cls=ComplexEncoder))
+
+        if clslist:
+            return HttpResponse(json.dumps({"ret":"F1","sphone":stu.phone,"sname":stu.name,"classlist":clslist}))
+        else:
+            return HttpResponse(json.dumps({"ret":"F2","sphone":stu.phone,"sname":stu.name}))
+
+    else:
+        return HttpResponse(json.dumps({"ret":"False"}))
+
+
+def QD(request):
+    data = json.loads(request.body)
+    uid,cid =data['id'][0],data['id'][-1]
+    print(uid,cid)
+
+    Ju = UandC.objects.filter(Q(uid=uid)&Q(cid=cid)).first()
+    print(Ju.cid)
+    Ju.RC -= 1
+    Ju.save()
+    
+    return HttpResponse(json.dumps({"ret":"True"}))
+
+

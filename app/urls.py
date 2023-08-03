@@ -4,5 +4,7 @@ urlpatterns = [
             path('',views.index,name="index"),
             path('weixinlogin', views.weixinlogin, name = "weixinlogin"),
             path('getclass',views.getclass, name = "getclass"),
-            path('myclass',views.myclass, name = 'myclass')
+            path('myclass',views.myclass, name = 'myclass'),
+            path('findQD',views.findQD,name='findQD'),
+            path('QD',views.QD,name='QD')
             ]

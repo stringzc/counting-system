@@ -45,3 +45,19 @@ class CandImg(models.Model):
     show2 = models.ImageField(upload_to='static/img',verbose_name='show2')
     show3 = models.ImageField(upload_to='static/img',verbose_name='show3')
     show4 = models.ImageField(upload_to='static/img',verbose_name='show4')
+
+class QDI(models.Model):
+    qid = models.AutoField(primary_key=True)
+    uid = models.IntegerField(verbose_name='uid')
+    cid = models.IntegerField(verbose_name='cid')
+    times = models.DateTimeField(verbose_name='times',null=True)
+class DLI(models.Model):
+    did = models.AutoField(primary_key=True) 
+    IP = models.CharField(max_length=300,verbose_name='IP')
+    uid = models.IntegerField(verbose_name='uid')
+    times = models.DateTimeField(verbose_name='times',null=True)
+
+class BDI(models.Model):
+    bid = models.AutoField(primary_key=True)
+    cid = models.IntegerField(verbose_name='cid')
+    times = models.DateTimeField(verbose_name='times',null=True)

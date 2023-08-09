@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from app.models import Person,Course,UandC,UandP,CandImg
+from app.models import Person,Course,UandC,UandP,CandImg,QDI,DLI,BDI
 import json
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import HttpResponse
@@ -20,16 +20,25 @@ def index(request):
     return render(request,'index.html')
 def weixinlogin(request):
     data = json.loads(request.body)
-    username = data['username']
-    password = data['password']
-    user = Person.objects.filter(name=username)[0]
-    power = UandP.objects.filter(cid=user.uid)[0]
-    print(check_password(password,user.password))
-    if check_password(password,user.password):
-        ret = 'True'
-    else:
-        ret = 'False'
-    return HttpResponse(json.dumps({"ret":ret,"power":power.power}))
+    if data['ID'] == 'wx':
+        ip = request.META['HTTP_X_FORWARDED_FOR']
+        #ip = request.META['REMOTE_ADDR']
+        print(ip)
+        username = data['username']
+        if username.isdigit():
+            user = Person.objects.filter(phone=username)[0]
+        else:
+            user = Person.objects.filter(name=username)[0]
+        password = data['password']
+        power = UandP.objects.filter(cid=user.uid)[0]
+        if check_password(password,user.password):
+            ret = True
+        else:
+            ret = False
+        if ret:
+            return HttpResponse(json.dumps({"ret":"True","power":power.power}))
+        else:
+            return HttpResponse(json.dumps({"ret":"False"}))
 
 def changePassword(request):
     data = json.loads(request.body)
@@ -43,28 +52,34 @@ def changePassword(request):
 
 def getclass(request):
     data = json.loads(request.body)
-    username = data['username']
-    user = Person.objects.filter(name=username)[0]
-    classlist = UandC.objects.filter(uid=user.uid)
-    alls = []
-    for i in classlist:
-        cls = Course.objects.filter(cid=i.cid)[0]
-        keshi = CandImg.objects.filter(cid=i.cid)[0]
-        alls.append({'class':cls.classs,'images':str(cls.img),'description':cls.description,'keshi':keshi.keshi,'times':i.times,'RC':i.RC,'id':str(int(i.uid)) + "+" + str(int(i.cid))})
-    print(classlist)
-    return HttpResponse(json.dumps(alls,ensure_ascii=False,cls=ComplexEncoder))
+    if data['ID'] == "wx":
+        username = data['username']
+        user = Person.objects.filter(name=username)[0]
+        classlist = UandC.objects.filter(uid=user.uid)
+        alls = []
+        for i in classlist:
+            cls = Course.objects.filter(cid=i.cid)[0]
+            keshi = CandImg.objects.filter(cid=i.cid)[0]
+            alls.append({'class':cls.classs,'images':str(cls.img),'description':cls.description,'keshi':keshi.keshi,'times':i.times,'RC':i.RC,'id':str(int(i.uid)) + "+" + str(int(i.cid))})
+        if len(alls) == 0:
+            return HttpResponse(json.dumps({"ret":"2","classlist":alls},ensure_ascii=False,cls=ComplexEncoder))
+        return HttpResponse(json.dumps({"ret":"0","classlist":alls},ensure_ascii=False,cls=ComplexEncoder))
 
 
 def myclass(request):
     data = json.loads(request.body)
-    uid,cid =data['id'][0],data['id'][-1]
-    Ju = UandC.objects.filter(Q(uid=uid)&Q(cid=cid)).first()
-    print(Ju.uid,Ju.cid)
-    Jc = Course.objects.filter(cid=cid).first()
-    images = CandImg.objects.filter(cid=cid).first()
-    imagelist=[{'urls':str(images.show1)},{'urls':str(images.show2)},{'urls':str(images.show3)},{'urls':str(images.show4)}]
-    alls = {'class':Jc.classs,'images':str(Jc.img),'descriptionall':Jc.descriptionall,'keshi':images.keshi,'times':Ju.times,'RC':Ju.RC,'imagelist':imagelist}
-    return HttpResponse(json.dumps(alls,cls=ComplexEncoder))
+    if data['ID'] == 'wx':
+        uid,cid =data['id'][0],data['id'][-1]
+        Ju = UandC.objects.filter(Q(uid=uid)&Q(cid=cid)).first()
+        Jc = Course.objects.filter(cid=cid).first()
+        images = CandImg.objects.filter(cid=cid).first()
+        imagelist=[{'urls':str(images.show1)},{'urls':str(images.show2)},{'urls':str(images.show3)},{'urls':str(images.show4)}]
+        qdlist=[]
+        for i in QDI.objects.filter(Q(uid=uid)&Q(cid=cid)):
+            qdlist.append({"id":i.qid,"times":i.times})
+        ret = len(qdlist) > 0
+        alls = {'class':Jc.classs,'images':str(Jc.img),'descriptionall':Jc.descriptionall,'keshi':images.keshi,'times':Ju.times,'RC':Ju.RC,'imagelist':imagelist,'qdlist':qdlist,'ret':not ret}
+        return HttpResponse(json.dumps(alls,cls=ComplexEncoder))
 
 
 def findQD(request):

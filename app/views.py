@@ -21,22 +21,24 @@ def index(request):
 def weixinlogin(request):
     data = json.loads(request.body)
     if data['ID'] == 'wx':
-        ip = request.META['HTTP_X_FORWARDED_FOR']
-        #ip = request.META['REMOTE_ADDR']
-        print(ip)
         username = data['username']
         if username.isdigit():
-            user = Person.objects.filter(phone=username)[0]
+            user = Person.objects.filter(phone=username)
         else:
-            user = Person.objects.filter(name=username)[0]
-        password = data['password']
-        power = UandP.objects.filter(cid=user.uid)[0]
-        if check_password(password,user.password):
-            ret = True
-        else:
-            ret = False
-        if ret:
-            return HttpResponse(json.dumps({"ret":"True","power":power.power}))
+            user = Person.objects.filter(name=username)
+        if user:
+            user = user.first()
+            password = data['password']
+            power = UandP.objects.filter(cid=user.uid)[0]
+            if check_password(password,user.password):
+                ret = True
+            else:
+                ret = False
+            if ret:
+                DLI.objects.create(IP=str(user.name),uid=user.uid,times=datetime.now())
+                return HttpResponse(json.dumps({"ret":"True","power":power.power}))
+            else:
+                return HttpResponse(json.dumps({"ret":"False"}))
         else:
             return HttpResponse(json.dumps({"ret":"False"}))
 
@@ -113,14 +115,39 @@ def findQD(request):
 
 def QD(request):
     data = json.loads(request.body)
-    uid,cid =data['id'][0],data['id'][-1]
-    print(uid,cid)
+    if data['ID'] == 'wx':
+        uid,cid =data['id'][0],data['id'][-1]
+        Ju = UandC.objects.filter(Q(uid=uid)&Q(cid=cid)).first()
+        Ju.RC -= 1
+        Ju.save()
+        QDI.objects.create(uid=uid,cid=cid,times=datetime.now())
+        return HttpResponse(json.dumps({"ret":"True"}))
 
-    Ju = UandC.objects.filter(Q(uid=uid)&Q(cid=cid)).first()
-    print(Ju.cid)
-    Ju.RC -= 1
-    Ju.save()
-    
-    return HttpResponse(json.dumps({"ret":"True"}))
+def bdfind(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        name = data['values']
+        if name.isdigit():
+            stu = Person.objects.filter(phone=name)
+        else:
+            stu = Person.objects.filter(name=name)
+        if stu:
+            stu = stu.first()
+            cls = UandC.objects.filter(uid=stu.uid)
+            myclasslist = []
+            for i in cls:
+                C = Course.objects.filter(cid=i.cid).first()
+                myclasslist.append({"images":str(C.img),"class":C.classs,"description":C.description, "RC":i.RC, "id":str(stu.uid) + "+" + str(i.cid)})
+            cls = Course.objects.all()
+            classlist = []
+            for i in cls:
+                C = CandImg.objects.filter(cid=i.cid).first()
+                classlist.append({"images":str(i.img),"class":i.classs,"description":i.description, "keshi":C.keshi, "id":str(stu.uid) + "+" + str(i.cid)})
+            showmy = len(myclasslist) > 0
+            showc = len(classlist) > 0
+            return HttpResponse(json.dumps({"ret":True,"datas":{"values":name,"sname":stu.name,"sphone":stu.phone,"showmy":not showmy,"showc":not showc,"myclasslist":myclasslist,"classlist":classlist}}))
+        else:
+            return HttpResponse(json.dumps({"ret":False}))
+
 
 

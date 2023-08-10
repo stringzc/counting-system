@@ -7,5 +7,7 @@ urlpatterns = [
             path('myclass',views.myclass, name = 'myclass'),
             path('findQD',views.findQD,name='findQD'),
             path('QD',views.QD,name='QD'),
-            path('bdfind',views.bdfind,name='bdfind')
+            path('bdfind',views.bdfind,name='bdfind'),
+            path('tuike',views.tuike,name='tuike'),
+            path('bd',views.bd,name='bd')
             ]

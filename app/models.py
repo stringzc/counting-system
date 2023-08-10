@@ -61,3 +61,4 @@ class BDI(models.Model):
     bid = models.AutoField(primary_key=True)
     cid = models.IntegerField(verbose_name='cid')
     times = models.DateTimeField(verbose_name='times',null=True)
+    uid = models.IntegerField(verbose_name='uid') 

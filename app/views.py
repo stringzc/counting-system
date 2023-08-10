@@ -136,8 +136,9 @@ def bdfind(request):
             cls = UandC.objects.filter(uid=stu.uid)
             myclasslist = []
             for i in cls:
-                C = Course.objects.filter(cid=i.cid).first()
-                myclasslist.append({"images":str(C.img),"class":C.classs,"description":C.description, "RC":i.RC, "id":str(stu.uid) + "+" + str(i.cid)})
+                if i.RC > 0:
+                    C = Course.objects.filter(cid=i.cid).first()
+                    myclasslist.append({"images":str(C.img),"class":C.classs,"description":C.description, "RC":i.RC, "id":str(stu.uid) + "+" + str(i.cid)})
             cls = Course.objects.all()
             classlist = []
             for i in cls:
@@ -150,4 +151,32 @@ def bdfind(request):
             return HttpResponse(json.dumps({"ret":False}))
 
 
+def tuike(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        uid,cid = data['ids'][0],data['ids'][-1]
+        cls = UandC.objects.filter(Q(uid=uid)&Q(cid=cid)).first()
+        keshi = CandImg.objects.filter(cid=cid).first()
+        if cls.RC >= keshi.keshi:
+            cls.RC -= keshi.keshi
+        else:
+            cls.RC = 0
+        cls.save()
+        return HttpResponse(json.dumps({"ret":True}))
+
+
+def bd(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        uid,cid = data['ids'][0],data['ids'][-1]
+        cls = UandC.objects.filter(Q(uid=uid)&Q(cid=cid))
+        ks = CandImg.objects.filter(cid=cid).first()
+        BDI.objects.create(uid=uid,cid=cid,times=datetime.now())
+        if cls:
+            cls = cls.first()
+            cls.RC += ks.keshi
+            cls.save()
+        else:
+            UandC.objects.create(uid=uid,cid=cid,RC=ks.keshi,times=datetime.now())
+        return HttpResponse(json.dumps({"ret":True}))
 

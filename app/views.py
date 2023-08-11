@@ -7,6 +7,8 @@ from django.http import HttpResponse
 # Create your views here.
 from datetime import date, datetime
 from django.db.models import Q
+from PIL import Image
+from django.core.files import File
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
@@ -180,3 +182,37 @@ def bd(request):
             UandC.objects.create(uid=uid,cid=cid,RC=ks.keshi,times=datetime.now())
         return HttpResponse(json.dumps({"ret":True}))
 
+def get_max_uid():
+    return max([int(i['uid']) for i in Person.objects.all().values('uid')])
+
+def weixinregistered(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        name = data['username']
+        if Person.objects.filter(name=name):
+            return HttpResponse(json.dumps({"ret":"F2"}))
+        phone = data['userphone']
+        if Person.objects.filter(phone=phone):
+            return HttpResponse(json.dumps({"ret":"F3"}))
+        password =make_password(data['password'])
+        power = data['power']
+        image_path = r"/work/counting-system/static/img/4.jpg"
+        img_file = Image.open(image_path)
+        img_file = File(img_file)
+        uid = get_max_uid()
+        Person.objects.create(uid= uid+1,name=name,phone=phone,password=password,img=img_file)
+        UandP.objects.create(cid=uid+1,power=power+1)
+        return HttpResponse(json.dumps({"ret":"F1"}))
+
+
+
+def logs(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        qdis = []
+        for i in QDI.objects.all().order_by('-pk'):
+            
+            qdis.append({""})
+        dlis = list(DLI.objects.all().order_by('-pk'))
+        bdis = list(BDI.objects.all().order_by('-pk'))
+        return HttpResponse(json.dumps({"lists":{"qdlist":qdis,"dllist":dlis,"bdlist":bdis}},cls=ComplexEncoder))

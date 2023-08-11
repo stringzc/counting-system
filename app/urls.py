@@ -9,5 +9,7 @@ urlpatterns = [
             path('QD',views.QD,name='QD'),
             path('bdfind',views.bdfind,name='bdfind'),
             path('tuike',views.tuike,name='tuike'),
-            path('bd',views.bd,name='bd')
+            path('bd',views.bd,name='bd'),
+            path('weixinregistered',views.weixinregistered,name='weixinregistered'),
+            path('logs',views.logs,name='logs')
             ]

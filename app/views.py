@@ -86,33 +86,75 @@ def myclass(request):
         return HttpResponse(json.dumps(alls,cls=ComplexEncoder))
 
 
+def check(tday,olds):
+    t = tday.split()
+    o = olds.split()
+    for i in range(len(t[0])):
+        if t[0][i] == '-':
+            continue
+        if t[0][i] > o[0][i]:
+            return True
+
+    tall = list(map(float,t[1].split(":")))
+    tall = tall[0]*3600 + tall[1]*60 + tall[2]
+    oall = list(map(float,o[1].split(":")))
+    oall = oall[0]*3600 + oall[1]*60 + oall[2]
+
+    return tall > (oall + 1800)
+
+def checkDAY(tday,olds):
+    t = tday.split()
+    o = olds.split()
+    for i in range(len(t[0])):
+        if t[0][i] == '-':
+            continue
+        if t[0][i] > o[0][i]:
+            return True
+    return False
+
+
+
 def findQD(request):
     data = json.loads(request.body)
-    name = data['values']
-    if name.isdigit():
-        stu = Person.objects.filter(phone=name)
-    else:
-        stu = Person.objects.filter(name=name)
-    if stu:
-        stu = stu.first()
-        cls = UandC.objects.filter(uid=stu.uid)
-        clslist = []
-        if cls:
-            for i in cls:
-                if i.RC >= 1:
-                    s = Course.objects.filter(cid=i.cid).first()
-                    clslist.append({'class':s.classs,'images':str(s.img),'description':s.description,'RC':i.RC,'id':str(i.uid) + '+' + str(i.cid)})
-
+    if data['ID'] == "wx":
+        name = data['values']
+        if name.isdigit():
+            stu = Person.objects.filter(phone=name)
         else:
-            return HttpResponse(json.dumps({"ret":"F2","sphone":stu.phone,"sname":stu.name},cls=ComplexEncoder))
+            stu = Person.objects.filter(name=name)
+        if stu:
+            stu = stu.first()
+            allQDI = QDI.objects.all().order_by('-pk')
+            qdlist = []
+            times1 = str(datetime.now())
+            if allQDI:
+                for i in allQDI:
+                    if not checkDAY(times1,str(i.times)):
+                        name = Person.objects.get(uid=i.uid)
+                        qdlist.append({"name":name.name,"times":i.times})
+            cls = UandC.objects.filter(uid=stu.uid)
+            clslist = []
+            if cls:
+                for i in cls:
+                    qdis = QDI.objects.filter(Q(uid=stu.uid)&Q(cid=i.cid))
+                    if qdis:
+                        qids = max([int(j.qid) for j in qdis])
+                        times2 = str(QDI.objects.get(qid=qids).times)
+                        ishow = check(times1,times2)
+                    else:
+                        ishow = True
 
-        if clslist:
-            return HttpResponse(json.dumps({"ret":"F1","sphone":stu.phone,"sname":stu.name,"classlist":clslist}))
+                    if i.RC >= 1:
+                        s = Course.objects.filter(cid=i.cid).first()
+                        clslist.append({'class':s.classs,'images':str(s.img),'description':s.description,'RC':i.RC,'id':str(i.uid) + '+' + str(i.cid), "ishow":ishow})
+            else:
+                return HttpResponse(json.dumps({"ret":"F2","sphone":stu.phone,"sname":stu.name},cls=ComplexEncoder))
+            if clslist:
+                return HttpResponse(json.dumps({"ret":"F1","sphone":stu.phone,"sname":stu.name,"classlist":clslist,"qdlist":qdlist},cls=ComplexEncoder))
+            else:
+                return HttpResponse(json.dumps({"ret":"F2","sphone":stu.phone,"sname":stu.name}))
         else:
-            return HttpResponse(json.dumps({"ret":"F2","sphone":stu.phone,"sname":stu.name}))
-
-    else:
-        return HttpResponse(json.dumps({"ret":"False"}))
+            return HttpResponse(json.dumps({"ret":"False"}))
 
 
 def QD(request):
@@ -211,8 +253,16 @@ def logs(request):
     if data['ID'] == 'wx':
         qdis = []
         for i in QDI.objects.all().order_by('-pk'):
-            
-            qdis.append({""})
-        dlis = list(DLI.objects.all().order_by('-pk'))
-        bdis = list(BDI.objects.all().order_by('-pk'))
+            name = Person.objects.get(uid=i.uid)
+            cls = Course.objects.get(cid=i.cid)
+            qdis.append({"name":name.name,"class":cls.classs,"times":i.times})
+        dlis = []
+        for i in DLI.objects.all().order_by('-pk'):
+            name = Person.objects.get(uid=i.uid)
+            dlis.append({"name":name.name,"phone":i.IP,"times":i.times})
+        bdis = []
+        for i in BDI.objects.all().order_by('-pk'):
+            nm = Person.objects.filter(uid=i.uid).first()
+            cls = Course.objects.filter(cid=i.cid).first()
+            bdis.append({"name":nm.name,"class":cls.classs,"times":i.times})
         return HttpResponse(json.dumps({"lists":{"qdlist":qdis,"dllist":dlis,"bdlist":bdis}},cls=ComplexEncoder))

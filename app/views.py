@@ -79,8 +79,10 @@ def myclass(request):
         images = CandImg.objects.filter(cid=cid).first()
         imagelist=[{'urls':str(images.show1)},{'urls':str(images.show2)},{'urls':str(images.show3)},{'urls':str(images.show4)}]
         qdlist=[]
-        for i in QDI.objects.filter(Q(uid=uid)&Q(cid=cid)):
-            qdlist.append({"id":i.qid,"times":i.times})
+        idss = 1
+        for i in QDI.objects.filter(Q(uid=uid)&Q(cid=cid))[::-1]:
+            qdlist.append({"id":idss,"times":i.times})
+            idss += 1
         ret = len(qdlist) > 0
         alls = {'class':Jc.classs,'images':str(Jc.img),'descriptionall':Jc.descriptionall,'keshi':images.keshi,'times':Ju.times,'RC':Ju.RC,'imagelist':imagelist,'qdlist':qdlist,'ret':not ret}
         return HttpResponse(json.dumps(alls,cls=ComplexEncoder))

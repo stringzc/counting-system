@@ -38,7 +38,7 @@ def weixinlogin(request):
                 ret = False
             if ret:
                 DLI.objects.create(IP=str(user.name),uid=user.uid,times=datetime.now())
-                return HttpResponse(json.dumps({"ret":"True","power":power.power}))
+                return HttpResponse(json.dumps({"ret":"True","power":power.power,"username":user.name}))
             else:
                 return HttpResponse(json.dumps({"ret":"False"}))
         else:

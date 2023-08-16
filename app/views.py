@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from app.models import Person,Course,UandC,UandP,CandImg,QDI,DLI,BDI
+from app.models import Person,Course,UandC,UandP,CandImg,QDI,DLI,BDI,UCI,plun
 import json
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import HttpResponse
@@ -88,7 +88,7 @@ def myclass(request):
         return HttpResponse(json.dumps(alls,cls=ComplexEncoder))
 
 
-def check(tday,olds):
+def check(tday,olds,nums):
     t = tday.split()
     o = olds.split()
     for i in range(len(t[0])):
@@ -102,7 +102,7 @@ def check(tday,olds):
     oall = list(map(float,o[1].split(":")))
     oall = oall[0]*3600 + oall[1]*60 + oall[2]
 
-    return tall > (oall + 1800)
+    return tall > (oall + nums)
 
 def checkDAY(tday,olds):
     t = tday.split()
@@ -142,7 +142,7 @@ def findQD(request):
                     if qdis:
                         qids = max([int(j.qid) for j in qdis])
                         times2 = str(QDI.objects.get(qid=qids).times)
-                        ishow = check(times1,times2)
+                        ishow = check(times1,times2,1800)
                     else:
                         ishow = True
 
@@ -246,6 +246,7 @@ def weixinregistered(request):
         uid = get_max_uid()
         Person.objects.create(uid= uid+1,name=name,phone=phone,password=password,img=img_file)
         UandP.objects.create(cid=uid+1,power=power+1)
+        UCI.objects.create(uid=uid+1,times=datetime.now())
         return HttpResponse(json.dumps({"ret":"F1"}))
 
 
@@ -268,3 +269,32 @@ def logs(request):
             cls = Course.objects.filter(cid=i.cid).first()
             bdis.append({"name":nm.name,"class":cls.classs,"times":i.times})
         return HttpResponse(json.dumps({"lists":{"qdlist":qdis,"dllist":dlis,"bdlist":bdis}},cls=ComplexEncoder))
+
+def pluns(request):
+    data = json.loads(request.body)
+    if data['ID'] == "wx":
+        nowtime = str(datetime.now())
+        username = data['username']
+        person = Person.objects.filter(name=username)
+        if person:
+            uid=person[0].uid
+            plunsall = plun.objects.filter(uid=uid).order_by('-pk')
+            quicks = False
+            if plunsall:
+                maxtimes = str(plunsall[0].times)
+                if not check(nowtime,maxtimes,60):
+                    quicks = True
+            if quicks:
+                return HttpResponse(json.dumps({"ret":"F1"}))
+            title = data['title']
+            content = data['content']
+            plun.objects.create(uid=uid,title=title,content=content,times=nowtime)
+            return HttpResponse(json.dumps({"ret":"True"}))
+        else:
+            return HttpResponse(json.dumps({"ret":"F2"}))
+
+
+
+
+
+

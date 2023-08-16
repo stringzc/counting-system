@@ -61,4 +61,17 @@ class BDI(models.Model):
     bid = models.AutoField(primary_key=True)
     cid = models.IntegerField(verbose_name='cid')
     times = models.DateTimeField(verbose_name='times',null=True)
-    uid = models.IntegerField(verbose_name='uid') 
+    uid = models.IntegerField(verbose_name='uid')
+
+class UCI(models.Model):
+    ucid = models.AutoField(primary_key=True)
+    uid = models.IntegerField(verbose_name='uid')
+    times = models.DateTimeField(verbose_name='times',null=True)
+
+class plun(models.Model):
+    plid = models.AutoField(primary_key=True)
+    uid = models.IntegerField(verbose_name='uid')
+    title = models.CharField(max_length=100,verbose_name='title') 
+    content = models.TextField(verbose_name='content',max_length=1024)
+    times = models.DateTimeField(verbose_name='times',null=True)
+

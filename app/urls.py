@@ -11,5 +11,6 @@ urlpatterns = [
             path('tuike',views.tuike,name='tuike'),
             path('bd',views.bd,name='bd'),
             path('weixinregistered',views.weixinregistered,name='weixinregistered'),
-            path('logs',views.logs,name='logs')
+            path('logs',views.logs,name='logs'),
+            path('pluns',views.pluns,name='pluns')
             ]

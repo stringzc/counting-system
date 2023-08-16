@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 
-from .models import Person,Course,UandC,UandP,CandImg,QDI,DLI,BDI
+from .models import Person,Course,UandC,UandP,CandImg,QDI,DLI,BDI,UCI,plun
 # Register your models here.
 admin.site.site_header = 'kks'  # 设置header
 admin.site.site_title = 'kks'   # 设置title
@@ -14,4 +14,5 @@ admin.site.register(CandImg)
 admin.site.register(QDI)
 admin.site.register(DLI)
 admin.site.register(BDI)
-
+admin.site.register(UCI)
+admin.site.register(plun)

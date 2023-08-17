@@ -75,3 +75,11 @@ class plun(models.Model):
     content = models.TextField(verbose_name='content',max_length=1024)
     times = models.DateTimeField(verbose_name='times',null=True)
 
+class black(models.Model):
+    id = models.AutoField(primary_key=True)
+    uid = models.IntegerField(verbose_name='uid')
+
+class BASIC(models.Model):
+    STARTTIME = models.DateTimeField(verbose_name='STARTTIME',null=True)
+    Checkincooldown = models.IntegerField(verbose_name='Checkincooldown')
+    Commentonthecooldown = models.IntegerField(verbose_name='Commentonthecooldown')

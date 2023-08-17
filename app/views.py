@@ -1,11 +1,11 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from app.models import Person,Course,UandC,UandP,CandImg,QDI,DLI,BDI,UCI,plun
+from app.models import Person,Course,UandC,UandP,CandImg,QDI,DLI,BDI,UCI,plun,black,BASIC
 import json
 from django.contrib.auth.hashers import make_password, check_password
 from django.http import HttpResponse
 # Create your views here.
-from datetime import date, datetime
+from datetime import date, datetime,timedelta
 from django.db.models import Q
 from PIL import Image
 from django.core.files import File
@@ -142,7 +142,8 @@ def findQD(request):
                     if qdis:
                         qids = max([int(j.qid) for j in qdis])
                         times2 = str(QDI.objects.get(qid=qids).times)
-                        ishow = check(times1,times2,1800)
+                        cooldown = BASIC.objects.all().first().Checkincooldown
+                        ishow = check(times1,times2,cooldown)
                     else:
                         ishow = True
 
@@ -282,7 +283,8 @@ def pluns(request):
             quicks = False
             if plunsall:
                 maxtimes = str(plunsall[0].times)
-                if not check(nowtime,maxtimes,60):
+                cooldown = BASIC.objects.all().first().Commentonthecooldown
+                if not check(nowtime,maxtimes,cooldown):
                     quicks = True
             if quicks:
                 return HttpResponse(json.dumps({"ret":"F1"}))
@@ -292,6 +294,30 @@ def pluns(request):
             return HttpResponse(json.dumps({"ret":"True"}))
         else:
             return HttpResponse(json.dumps({"ret":"F2"}))
+
+def gethots(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        today = datetime.now()
+        dlall = DLI.objects.all()
+        dldict = {}
+        for i in dlall:
+            if i.times.year == today.year and i.times.month == today.month:
+                if i.uid not in dldict.keys():
+                    dldict[i.uid] = 1
+                else:
+                    dldict[i.uid] += 1
+        users = len(dldict.keys())
+        startday = BASIC.objects.all().first().STARTTIME
+        d = timedelta(days=1)
+        days = 0
+        while startday < today:
+            startday += d
+            days += 1
+        hots = {}
+        BDI = 
+            
+
 
 
 

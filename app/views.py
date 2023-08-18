@@ -9,6 +9,7 @@ from datetime import date, datetime,timedelta
 from django.db.models import Q
 from PIL import Image
 from django.core.files import File
+import random
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
@@ -17,6 +18,11 @@ class ComplexEncoder(json.JSONEncoder):
             return obj.strftime('%Y-%m-%d')
         else:
             return json.JSONEncoder.default(self, obj)
+
+def getcolor(a):
+    color = ['BurlyWood', 'CadetBlue', 'Coral', 'Darkorange', 'DeepPink', 'IndianRed',  'Khaki', 'LightCoral', 'LightPink' ,'LightSalmon', 'Orange', 'OrangeRed', 'Orchid', 'PeachPuff', 'LightCyan']
+    return color[a%(len(color))]
+
 
 def index(request):
     return render(request,'index.html')
@@ -314,13 +320,65 @@ def gethots(request):
         while startday < today:
             startday += d
             days += 1
-        hots = {}
-        BDI = 
-            
+        clist = []
+        BDIall = BDI.objects.all()
+        clsall = Course.objects.all()
+        for i in clsall:
+            clist.append([0,i.classs,getcolor(random.choice(list(range(31415926))))])
+        guodu = {}
+        for i in BDIall:
+            nm = Course.objects.get(cid=i.cid).classs
+            if nm not in guodu.keys():
+                guodu[nm] = 1
+            else:
+                guodu[nm] += 1
+        for i in range(len(clist)):
+            if clist[i][1] in guodu.keys():
+                clist[i][0] = guodu[clist[i][1]]
+        clist.sort(reverse=True)
+        for i in range(len(clist)):
+            if i == 0:
+                clist[0].append("static/hf3.png")
+            else:
+                if clist[i][0] != 0:
+                    clist[i].append("static/hf2.png")
+                else:
+                    clist[i].append("static/hf1.png")
+        maxs = clist[0][0]
+        clist = [{'name':i[1],'color':i[2],'width':str(int(60*(i[0]/maxs))) + '%','url':i[3]} for i in clist]
+        return HttpResponse(json.dumps({"days":days,"users":users,'Hots':clist}))
 
 
+def getallcls(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        clsall = Course.objects.all()
+        clslist = [{"id":"11","name":"admins","color":getcolor(random.choice(list(range(31415926)))),"url":"static/alladmins.png"}]
+        clslist.append({"id":"10","name":"alluser","color":getcolor(random.choice(list(range(31415926)))),"url":"static/alluser.png"})
+        for i in clsall:
+            clslist.append({"id":i.cid,"name":i.classs,"color":getcolor(random.choice(list(range(31415926)))),"url":str(i.img)})
+
+        return HttpResponse(json.dumps({"clslist":clslist}))
 
 
-
-
+def getuserdate(request):
+    data = json.loads(request.body)
+    if data['ID'] == 'wx':
+        id = data['id']
+        datelist = []
+        if id == "11":
+            userall = UandP.objects.filter(Q(power=4)|Q(power=5))
+            for i in userall:
+                nm = Person.objects.get(uid=i.cid).name
+                datelist.append({'id':i.cid,'name':nm,'checked':False})
+        elif id == "10":
+            userall = Person.objects.all()
+            for i in userall:
+                datelist.append({'id':i.uid,'name':i.name,'checked':False})
+        else:
+            userall = UandC.objects.filter(cid=id)
+            for i in userall:
+                nm = Person.objects.get(uid=i.uid).name
+                datelist.append({'id':i.uid,'name':nm,'checked':False})
+        return HttpResponse(json.dumps({"datelist":datelist}))
 

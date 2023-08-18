@@ -12,5 +12,8 @@ urlpatterns = [
             path('bd',views.bd,name='bd'),
             path('weixinregistered',views.weixinregistered,name='weixinregistered'),
             path('logs',views.logs,name='logs'),
-            path('pluns',views.pluns,name='pluns')
+            path('pluns',views.pluns,name='pluns'),
+            path('gethots',views.gethots,name='gethots'),
+            path('getallcls',views.getallcls,name='getallcls'),
+            path('getuserdate',views.getuserdate,name='getuserdate')
             ]
